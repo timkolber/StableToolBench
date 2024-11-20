@@ -11,6 +11,9 @@ from toolbench.inference.Algorithms.single_chain import single_chain
 from toolbench.inference.Downstream_tasks.base_env import base_env
 from toolbench.inference.LLM.chatgpt_function_model import ChatGPTFunction
 from toolbench.inference.LLM.davinci_model import Davinci
+from toolbench.inference.LLM.dexperts_tool_llama import (
+    DExpertsToolLLaMA,
+)
 from toolbench.inference.LLM.retriever import ToolRetriever
 from toolbench.inference.LLM.tool_llama_lora_model import ToolLLaMALoRA
 from toolbench.inference.LLM.tool_llama_model import ToolLLaMA
@@ -21,10 +24,6 @@ from toolbench.utils import (
     standardize,
 )
 from tqdm import tqdm
-
-from toolllm_project.StableToolBench.toolbench.inference.LLM.dexperts_tool_llama import (
-    DExpertsToolLLaMA,
-)
 
 
 # For pipeline environment preparation

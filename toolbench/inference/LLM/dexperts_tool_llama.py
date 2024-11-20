@@ -6,8 +6,8 @@ import time
 from typing import List, Optional
 
 import torch
-from dexperts import DExpertsLlama
 from termcolor import colored
+from toolbench.inference.LLM.dexperts import DExpertsLlama
 from toolbench.inference.utils import (
     SimpleChatIO,
     generate_stream,

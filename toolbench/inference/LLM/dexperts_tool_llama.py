@@ -6,6 +6,7 @@ import time
 from typing import List, Optional
 
 import torch
+from dexperts import DExpertsLlama
 from termcolor import colored
 from toolbench.inference.utils import (
     SimpleChatIO,
@@ -15,31 +16,35 @@ from toolbench.inference.utils import (
 from toolbench.model.model_adapter import get_conversation_template
 from toolbench.utils import process_system_message
 from transformers import (
-    AutoModelForCausalLM,
     AutoTokenizer,
 )
 
 
-class ToolLLaMA:
+class DExpertsToolLLaMA:
     def __init__(
         self,
-        model_name_or_path: str,
+        base_model_name_or_path: str,
+        expert_model_name_or_path: str,
+        antiexpert_model_name_or_path: str,
         template: str = "tool-llama-single-round",
         device: str = "cuda",
         cpu_offloading: bool = False,
         max_sequence_length: int = 8192,
     ) -> None:
         super().__init__()
-        self.model_name = model_name_or_path
+        self.model_name = base_model_name_or_path
         self.template = template
         self.max_sequence_length = max_sequence_length
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path,
+            base_model_name_or_path,
             use_fast=False,
             model_max_length=self.max_sequence_length,
         )
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name_or_path, low_cpu_mem_usage=True, device_map="auto"
+        self.model = DExpertsLlama(
+            base_model_name_or_path=base_model_name_or_path,
+            expert_model_name_or_path=expert_model_name_or_path,
+            antiexpert_model_name_or_path=antiexpert_model_name_or_path,
+            tokenizer=self.tokenizer,
         )
         if self.tokenizer.pad_token_id == None:
             self.tokenizer.add_special_tokens(
@@ -176,7 +181,7 @@ class ToolLLaMA:
 if __name__ == "__main__":
     # can accept all huggingface LlamaModel family
 
-    llm = ToolLLaMA("ToolBench/ToolLLaMA-2-7b-v2", device="cuda")
+    llm = DExpertsToolLLaMA("ToolBench/ToolLLaMA-2-7b-v2", device="cuda")
 
     messages = [
         {

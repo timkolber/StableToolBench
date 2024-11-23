@@ -34,14 +34,22 @@ class DExpertsLlama:
         the question. This makes evaluation on MC datasets easier.
         """
 
+        model_kwargs = {
+            "device_map": "auto",
+            "offload_folder": "offload_folder",
+            "torch_dtype": torch.float16,
+            "offload_state_dict": True,
+            "load_in_8bit": True,
+        }
+
         self.base = AutoModelForCausalLM.from_pretrained(
-            base_model_name_or_path, load_in_8bit=True
+            base_model_name_or_path, **model_kwargs
         )
         self.expert = AutoModelForCausalLM.from_pretrained(
-            expert_model_name_or_path, load_in_8bit=True
+            expert_model_name_or_path, **model_kwargs
         )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
-            antiexpert_model_name_or_path, load_in_8bit=True
+            antiexpert_model_name_or_path, **model_kwargs
         )
 
         self.base.eval()

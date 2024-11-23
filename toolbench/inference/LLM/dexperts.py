@@ -36,7 +36,7 @@ class DExpertsLlama:
 
         model_kwargs = {
             "device_map": "auto",
-            "offload_folder": "offload_folder",
+            "offload_folder": "/content/drive/MyDrive/toolllm/offload_folder",
             "torch_dtype": torch.float16,
             "offload_state_dict": True,
             "load_in_8bit": True,

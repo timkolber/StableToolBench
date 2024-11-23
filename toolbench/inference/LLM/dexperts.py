@@ -16,7 +16,7 @@ from transformers.generation.utils import (
 B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
 
 
-class DExpertsLlama:
+class DExpertsLlama(torch.nn.Module):
     def __init__(
         self,
         base_model_name_or_path: str,
@@ -55,6 +55,7 @@ class DExpertsLlama:
         self.base.eval()
         self.expert.eval()
         self.antiexpert.eval()
+        self.eval()
 
         self.tokenizer = tokenizer
         self.alpha = alpha

@@ -60,6 +60,7 @@ class DExpertsLlama:
         self.alpha = alpha
         self.device = self.base.device
         self.chat_response_prefix = chat_response_prefix
+        self.config = self.base.config
 
         # Llama chat experts need different formatting
         self.use_chat_format_for_expert = (

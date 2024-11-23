@@ -80,11 +80,13 @@ class DExpertsLlama(torch.nn.Module):
             if self.chat_response_prefix:
                 self.chat_suffix += f" {chat_response_prefix}"
 
-    def forward(self, base_inputs, expert_inputs, antiexpert_inputs, return_dict=None):
-        base_outputs = self.base(**base_inputs, return_dict=return_dict)
-        expert_outputs = self.expert(**expert_inputs, return_dict=return_dict)
+    def forward(
+        self, base_inputs, expert_inputs, antiexpert_inputs, return_dict=None, **kwargs
+    ):
+        base_outputs = self.base(**base_inputs, **kwargs, return_dict=return_dict)
+        expert_outputs = self.expert(**expert_inputs, **kwargs, return_dict=return_dict)
         antiexpert_outputs = self.antiexpert(
-            **antiexpert_inputs, return_dict=return_dict
+            **antiexpert_inputs, **kwargs, return_dict=return_dict
         )
 
         return base_outputs, expert_outputs, antiexpert_outputs

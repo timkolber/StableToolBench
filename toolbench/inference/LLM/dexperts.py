@@ -86,10 +86,14 @@ class DExpertsLlama:
 
         return base_outputs, expert_outputs, antiexpert_outputs
 
-    def resize_token_embeddings(self):
-        self.base.resize_token_embeddings(len(self.tokenizer))
-        self.expert.resize_token_embeddings(len(self.tokenizer))
-        self.antiexpert.resize_token_embeddings(len(self.tokenizer))
+    def resize_token_embeddings(
+        self,
+        new_num_tokens: Optional[int] = None,
+        pad_to_multiple_of: Optional[int] = None,
+    ) -> torch.nn.Embedding:
+        self.base.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
+        self.expert.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
+        self.antiexpert.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
 
     def _get_tokenized_chat_inputs(self, input_ids):
         """Decode input_ids and encode again to insert chat formatting"""

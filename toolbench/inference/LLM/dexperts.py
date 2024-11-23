@@ -34,10 +34,14 @@ class DExpertsLlama:
         the question. This makes evaluation on MC datasets easier.
         """
 
-        self.base = AutoModelForCausalLM.from_pretrained(base_model_name_or_path)
-        self.expert = AutoModelForCausalLM.from_pretrained(expert_model_name_or_path)
+        self.base = AutoModelForCausalLM.from_pretrained(
+            base_model_name_or_path, load_in_8bit=True
+        )
+        self.expert = AutoModelForCausalLM.from_pretrained(
+            expert_model_name_or_path, load_in_8bit=True
+        )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
-            antiexpert_model_name_or_path
+            antiexpert_model_name_or_path, load_in_8bit=True
         )
 
         self.base.eval()

@@ -153,9 +153,9 @@ class DExpertsLlama(torch.nn.Module):
         logits_processor: Optional[LogitsProcessorList] = None,
         stopping_criteria: Optional[StoppingCriteriaList] = None,
         return_logits_for_analysis: bool = False,
-        base_kwargs=False,
-        expert_kwargs=False,
-        antiexpert_kwargs=False,
+        base_kwargs=None,
+        expert_kwargs=None,
+        antiexpert_kwargs=None,
         **kwargs,
     ):
         if base_kwargs is None:

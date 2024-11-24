@@ -133,7 +133,8 @@ def generate_stream(
             else:
                 out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
                 logits = out.logits
-            past_key_values = out.past_key_values
+            if type(model) is not DExpertsLlama:
+                past_key_values = out.past_key_values
         else:
             if model.config.is_encoder_decoder:
                 out = model.decoder(

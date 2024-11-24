@@ -13,6 +13,10 @@ from transformers.generation.logits_process import (
     TopPLogitsWarper,
 )
 
+from toolllm_project.StableToolBench.toolbench.inference.LLM.dexperts_tool_llama import (
+    DExpertsToolLLaMA,
+)
+
 
 # For DFS
 def softmax_bias(answers, temperature=1):
@@ -122,6 +126,13 @@ def generate_stream(
                     use_cache=True,
                 )
                 logits = model.lm_head(out[0])
+            elif type(model) is DExpertsToolLLaMA:
+                _, analysis = model.generate(
+                    input_ids=torch.as_tensor([input_ids], device=device),
+                    max_new_tokens=1,
+                    return_logits_for_analysis=True,
+                )
+                logits = analysis["logits_dexperts"]
             else:
                 out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
                 logits = out.logits
@@ -136,6 +147,16 @@ def generate_stream(
                 )
 
                 logits = model.lm_head(out[0])
+            elif type(model) is DExpertsToolLLaMA:
+                _, analysis = model.generate(
+                    input_ids=torch.as_tensor([[token]], device=device),
+                    max_new_tokens=1,
+                    return_logits_for_analysis=True,
+                    base_kwargs=analysis["base_kwargs"],
+                    expert_kwargs=analysis["expert_kwargs"],
+                    antiexpert_kwargs=analysis["antiexpert_kwargs"],
+                )
+                logits = analysis["logits_dexperts"]
             else:
                 out = model(
                     input_ids=torch.as_tensor([[token]], device=device),
@@ -151,6 +172,8 @@ def generate_stream(
             else:
                 tmp_output_ids = None
             last_token_logits = logits_processor(tmp_output_ids, logits[:, -1, :])[0]
+        elif type(model) is DExpertsToolLLaMA:
+            last_token_logits = logits
         else:
             last_token_logits = logits[0, -1, :]
 

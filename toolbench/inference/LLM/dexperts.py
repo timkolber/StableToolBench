@@ -153,11 +153,15 @@ class DExpertsLlama(torch.nn.Module):
         logits_processor: Optional[LogitsProcessorList] = None,
         stopping_criteria: Optional[StoppingCriteriaList] = None,
         return_logits_for_analysis: bool = False,
+        base_kwargs=False,
+        expert_kwargs=False,
+        antiexpert_kwargs=False,
         **kwargs,
     ):
-        base_kwargs = kwargs.copy()
-        expert_kwargs = kwargs.copy()
-        antiexpert_kwargs = kwargs.copy()
+        if not base_kwargs or expert_kwargs or antiexpert_kwargs:
+            base_kwargs = kwargs.copy()
+            expert_kwargs = kwargs.copy()
+            antiexpert_kwargs = kwargs.copy()
 
         # prepare inputs for expert model
         if self.use_chat_format_for_expert:
@@ -277,6 +281,9 @@ class DExpertsLlama(torch.nn.Module):
                 break
 
         if return_logits_for_analysis:
+            analysis_data["base_kwargs"] = base_kwargs
+            analysis_data["expert_kwargs"] = expert_kwargs
+            analysis_data["antiexpert_kwargs"] = antiexpert_kwargs
             for k in analysis_data.keys():
                 if k.startswith("logits"):
                     analysis_data[k] = torch.cat(analysis_data[k], dim=1)

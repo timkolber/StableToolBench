@@ -162,7 +162,8 @@ def generate_stream(
                     past_key_values=past_key_values,
                 )
                 logits = out.logits
-            past_key_values = out.past_key_values
+            if type(model) is not DExpertsLlama:
+                past_key_values = out.past_key_values
 
         if logits_processor:
             if repetition_penalty > 1.0:

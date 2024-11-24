@@ -138,7 +138,7 @@ def generate_stream(
         else:
             if model.config.is_encoder_decoder:
                 out = model.decoder(
-                    input_ids=torch.as_tensor([[token]], device=device),
+                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
                     encoder_hidden_states=encoder_output,
                     use_cache=True,
                     past_key_values=past_key_values,
@@ -147,7 +147,7 @@ def generate_stream(
                 logits = model.lm_head(out[0])
             elif type(model) is DExpertsLlama:
                 next_token, analysis = model.generate(
-                    input_ids=torch.as_tensor([[token]], device=device),
+                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
                     max_new_tokens=1,
                     return_logits_for_analysis=True,
                     base_kwargs=analysis["base_kwargs"],
@@ -157,7 +157,7 @@ def generate_stream(
                 logits = analysis["logits_dexperts"]
             else:
                 out = model(
-                    input_ids=torch.as_tensor([[token]], device=device),
+                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
                     use_cache=True,
                     past_key_values=past_key_values,
                 )

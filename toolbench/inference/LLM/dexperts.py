@@ -158,7 +158,7 @@ class DExpertsLlama(torch.nn.Module):
         antiexpert_kwargs=False,
         **kwargs,
     ):
-        if not base_kwargs or expert_kwargs or antiexpert_kwargs:
+        if base_kwargs is None:
             base_kwargs = kwargs.copy()
             expert_kwargs = kwargs.copy()
             antiexpert_kwargs = kwargs.copy()

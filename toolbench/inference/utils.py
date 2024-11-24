@@ -123,7 +123,7 @@ def generate_stream(
                     use_cache=True,
                 )
                 logits = model.lm_head(out[0])
-            elif type(model.model) is DExpertsLlama:
+            elif type(model) is DExpertsLlama:
                 _, analysis = model.generate(
                     input_ids=torch.as_tensor([input_ids], device=device),
                     max_new_tokens=1,
@@ -144,7 +144,7 @@ def generate_stream(
                 )
 
                 logits = model.lm_head(out[0])
-            elif type(model.model) is DExpertsLlama:
+            elif type(model) is DExpertsLlama:
                 _, analysis = model.generate(
                     input_ids=torch.as_tensor([[token]], device=device),
                     max_new_tokens=1,
@@ -169,7 +169,7 @@ def generate_stream(
             else:
                 tmp_output_ids = None
             last_token_logits = logits_processor(tmp_output_ids, logits[:, -1, :])[0]
-        elif type(model.model) is DExpertsLlama:
+        elif type(model) is DExpertsLlama:
             last_token_logits = logits
         else:
             last_token_logits = logits[0, -1, :]

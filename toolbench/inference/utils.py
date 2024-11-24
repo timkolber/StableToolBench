@@ -5,16 +5,15 @@ from typing import Iterable
 
 import numpy as np
 import torch
+from toolbench.inference.LLM.dexperts_tool_llama import (
+    DExpertsToolLLaMA,
+)
 from transformers.generation.logits_process import (
     LogitsProcessorList,
     RepetitionPenaltyLogitsProcessor,
     TemperatureLogitsWarper,
     TopKLogitsWarper,
     TopPLogitsWarper,
-)
-
-from toolllm_project.StableToolBench.toolbench.inference.LLM.dexperts_tool_llama import (
-    DExpertsToolLLaMA,
 )
 
 

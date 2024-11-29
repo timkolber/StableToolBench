@@ -113,6 +113,15 @@ def generate_stream(
             device=device,
         )
 
+    if type(model) is DExpertsLlama:
+        _, results = model.generate(
+            input_ids=torch.as_tensor(start_ids, device=device),
+            max_new_tokens=max_new_tokens,
+            return_logits_for_analysis=True,
+            do_sample=True,
+        )
+        print(results["tokens"])
+
     past_key_values = out = None
     for i in range(max_new_tokens):
         if i == 0:

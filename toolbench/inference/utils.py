@@ -164,7 +164,8 @@ def generate_stream(
                 logits = out.logits
             if type(model) is not DExpertsLlama:
                 past_key_values = out.past_key_values
-
+        print(logits)
+        print(logits.shape)
         if logits_processor:
             if repetition_penalty > 1.0:
                 tmp_output_ids = torch.as_tensor([output_ids], device=logits.device)
@@ -172,7 +173,7 @@ def generate_stream(
                 tmp_output_ids = None
             last_token_logits = logits_processor(tmp_output_ids, logits[:, -1, :])[0]
         elif type(model) is DExpertsLlama:
-            last_token_logits = logits
+            last_token_logits = logits[0, -1, :]
         else:
             last_token_logits = logits[0, -1, :]
 
@@ -188,7 +189,7 @@ def generate_stream(
                 token = int(torch.argmax(last_token_logits))
             else:
                 probs = torch.softmax(last_token_logits, dim=-1)
-                token = int(torch.multinomial(probs, num_samples=1))
+                token = int(torch.multinomial(probs, num_samples=1).squeeze(1))
 
         output_ids.append(token)
 

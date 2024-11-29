@@ -119,6 +119,7 @@ def generate_stream(
             max_new_tokens=max_new_tokens,
             return_logits_for_analysis=True,
             do_sample=True,
+            stop_token_ids=stop_token_ids,
         )
         print(results["tokens"])
 

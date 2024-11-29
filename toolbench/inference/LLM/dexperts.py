@@ -5,7 +5,11 @@ from typing import Any, Dict, Optional
 
 import torch
 import torch.nn.functional as F
-from transformers import AutoModelForCausalLM, PreTrainedTokenizer
+from transformers import (
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+    PreTrainedTokenizer,
+)
 from transformers.generation.utils import (
     LogitsProcessorList,
     ModelOutput,
@@ -40,7 +44,7 @@ class DExpertsLlama(torch.nn.Module):
             "offload_folder": "/content/drive/MyDrive/toolllm/offload_folder",
             "torch_dtype": torch.float16,
             "offload_state_dict": True,
-            "load_in_8bit": True,
+            "quantization_config": BitsAndBytesConfig(load_in_4bit=True),
         }
 
         self.base = AutoModelForCausalLM.from_pretrained(
@@ -153,15 +157,12 @@ class DExpertsLlama(torch.nn.Module):
         logits_processor: Optional[LogitsProcessorList] = None,
         stopping_criteria: Optional[StoppingCriteriaList] = None,
         return_logits_for_analysis: bool = False,
-        base_kwargs=None,
-        expert_kwargs=None,
-        antiexpert_kwargs=None,
+        stop_token_ids=[],
         **kwargs,
     ):
-        if base_kwargs is None:
-            base_kwargs = kwargs.copy()
-            expert_kwargs = kwargs.copy()
-            antiexpert_kwargs = kwargs.copy()
+        base_kwargs = kwargs.copy()
+        expert_kwargs = kwargs.copy()
+        antiexpert_kwargs = kwargs.copy()
 
         # prepare inputs for expert model
         if self.use_chat_format_for_expert:
@@ -267,6 +268,9 @@ class DExpertsLlama(torch.nn.Module):
 
             # stopping criteria
             if stopping_criteria and stopping_criteria(input_ids, None):
+                break
+
+            if next_tokens in stop_token_ids:
                 break
 
             # if eos_token was found in one sentence, set sentence to finished

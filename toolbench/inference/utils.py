@@ -124,7 +124,7 @@ def generate_stream(
                 )
                 logits = model.lm_head(out[0])
             elif type(model) is DExpertsLlama:
-                next_token, analysis = model.generate(
+                _, analysis = model.generate(
                     input_ids=torch.as_tensor([input_ids], device=device),
                     max_new_tokens=1,
                     return_logits_for_analysis=True,
@@ -146,7 +146,7 @@ def generate_stream(
 
                 logits = model.lm_head(out[0])
             elif type(model) is DExpertsLlama:
-                next_token, analysis = model.generate(
+                _, analysis = model.generate(
                     input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
                     max_new_tokens=1,
                     return_logits_for_analysis=True,
@@ -164,8 +164,6 @@ def generate_stream(
                 logits = out.logits
             if type(model) is not DExpertsLlama:
                 past_key_values = out.past_key_values
-        print(logits)
-        print(logits.shape)
         if logits_processor:
             if repetition_penalty > 1.0:
                 tmp_output_ids = torch.as_tensor([output_ids], device=logits.device)
@@ -177,19 +175,15 @@ def generate_stream(
         else:
             last_token_logits = logits[0, -1, :]
 
-        if type(model) is DExpertsLlama:
-            token = next_token
+        if device == "mps":
+            # Switch to CPU by avoiding some bugs in mps backend.
+            last_token_logits = last_token_logits.float().to("cpu")
 
+        if temperature < 1e-5 or top_p < 1e-8:  # greedy
+            token = int(torch.argmax(last_token_logits))
         else:
-            if device == "mps":
-                # Switch to CPU by avoiding some bugs in mps backend.
-                last_token_logits = last_token_logits.float().to("cpu")
-
-            if temperature < 1e-5 or top_p < 1e-8:  # greedy
-                token = int(torch.argmax(last_token_logits))
-            else:
-                probs = torch.softmax(last_token_logits, dim=-1)
-                token = int(torch.multinomial(probs, num_samples=1).squeeze(1))
+            probs = torch.softmax(last_token_logits, dim=-1)
+            token = int(torch.multinomial(probs, num_samples=1).squeeze(1))
 
         output_ids.append(token)
 

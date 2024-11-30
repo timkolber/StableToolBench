@@ -51,7 +51,7 @@ class DExpertsLlama(torch.nn.Module):
             pretrained_model_name_or_path=expert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
             offload_state_dict=True,
-            offload_folder="offload_base/",
+            offload_folder="offload_expert/",
             max_memory={0: "5GB", "cpu": "20GB"},
             device_map="auto",
         )
@@ -59,7 +59,7 @@ class DExpertsLlama(torch.nn.Module):
             pretrained_model_name_or_path=antiexpert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
             offload_state_dict=True,
-            offload_folder="offload_base/",
+            offload_folder="offload_antiexpert/",
             max_memory={0: "5GB", "cpu": "20GB"},
             device_map="auto",
         )

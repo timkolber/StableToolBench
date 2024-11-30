@@ -62,7 +62,7 @@ class DExpertsToolLLaMA:
                 "model": "",
                 "prompt": prompt,
                 "temperature": 0,
-                "max_new_tokens": 1024,
+                "max_new_tokens": 256,
                 "stop": "</s>",
                 "stop_token_ids": None,
                 "echo": False,

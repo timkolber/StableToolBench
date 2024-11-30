@@ -48,7 +48,9 @@ class DExpertsLlama(torch.nn.Module):
         base_device_map = infer_auto_device_map(
             self.base, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
         )
-        self.base = dispatch_model(self.base, device_map=base_device_map)
+        self.base = dispatch_model(
+            self.base, device_map=base_device_map, offload_dir="offload_base/"
+        )
         self.expert = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=expert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
@@ -56,7 +58,9 @@ class DExpertsLlama(torch.nn.Module):
         expert_device_map = infer_auto_device_map(
             self.expert, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
         )
-        self.expert = dispatch_model(self.expert, device_map=expert_device_map)
+        self.expert = dispatch_model(
+            self.expert, device_map=expert_device_map, offload_dir="offload_expert/"
+        )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=antiexpert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
@@ -65,7 +69,9 @@ class DExpertsLlama(torch.nn.Module):
             self.antiexpert, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
         )
         self.antiexpert = dispatch_model(
-            self.antiexpert, device_map=antiexpert_device_map
+            self.antiexpert,
+            device_map=antiexpert_device_map,
+            offload_dir="offload_antiexpert/",
         )
 
         self.base.eval()

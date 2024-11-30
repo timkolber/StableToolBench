@@ -121,129 +121,155 @@ def generate_stream(
             do_sample=True,
             stop_token_ids=stop_token_ids,
         )
-        print(results["tokens"])
-
-    past_key_values = out = None
-    for i in range(max_new_tokens):
-        if i == 0:
-            if model.config.is_encoder_decoder:
-                out = model.decoder(
-                    input_ids=start_ids,
-                    encoder_hidden_states=encoder_output,
-                    use_cache=True,
-                )
-                logits = model.lm_head(out[0])
-            elif type(model) is DExpertsLlama:
-                _, analysis = model.generate(
-                    input_ids=torch.as_tensor([input_ids], device=device),
-                    max_new_tokens=1,
-                    return_logits_for_analysis=True,
-                )
-                logits = analysis["logits_dexperts"]
-            else:
-                out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
-                logits = out.logits
-            if type(model) is not DExpertsLlama:
-                past_key_values = out.past_key_values
+        output_ids = results["token_ids"]
+        i = results["steps"]
+        if echo:
+            tmp_output_ids = output_ids
+            rfind_start = len_prompt
         else:
-            if model.config.is_encoder_decoder:
-                out = model.decoder(
-                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
-                    encoder_hidden_states=encoder_output,
-                    use_cache=True,
-                    past_key_values=past_key_values,
-                )
+            tmp_output_ids = output_ids[input_echo_len:]
+            rfind_start = 0
 
-                logits = model.lm_head(out[0])
-            elif type(model) is DExpertsLlama:
-                _, analysis = model.generate(
-                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
-                    max_new_tokens=1,
-                    return_logits_for_analysis=True,
-                    base_kwargs=analysis["base_kwargs"],
-                    expert_kwargs=analysis["expert_kwargs"],
-                    antiexpert_kwargs=analysis["antiexpert_kwargs"],
-                )
-                logits = analysis["logits_dexperts"]
-            else:
-                out = model(
-                    input_ids=torch.as_tensor([[token]], device=device),  # noqa: F821
-                    use_cache=True,
-                    past_key_values=past_key_values,
-                )
-                logits = out.logits
-            if type(model) is not DExpertsLlama:
-                past_key_values = out.past_key_values
-        if logits_processor:
-            if repetition_penalty > 1.0:
-                tmp_output_ids = torch.as_tensor([output_ids], device=logits.device)
-            else:
-                tmp_output_ids = None
-            last_token_logits = logits_processor(tmp_output_ids, logits[:, -1, :])[0]
-        elif type(model) is DExpertsLlama:
-            last_token_logits = logits[0, -1, :]
-        else:
-            last_token_logits = logits[0, -1, :]
-
-        if device == "mps":
-            # Switch to CPU by avoiding some bugs in mps backend.
-            last_token_logits = last_token_logits.float().to("cpu")
-
-        if temperature < 1e-5 or top_p < 1e-8:  # greedy
-            token = int(torch.argmax(last_token_logits))
-        else:
-            probs = torch.softmax(last_token_logits, dim=-1)
-            token = int(torch.multinomial(probs, num_samples=1).squeeze(1))
-
-        output_ids.append(token)
-
-        if token in stop_token_ids:
-            stopped = True
-        else:
-            stopped = False
-        if i == 0 and force_generate:
-            stopped = False
-        if i == max_new_tokens - 1 or stopped:
-            if echo:
-                tmp_output_ids = output_ids
-                rfind_start = len_prompt
-            else:
-                tmp_output_ids = output_ids[input_echo_len:]
-                rfind_start = 0
-
-            output = tokenizer.decode(
-                tmp_output_ids,
-                skip_special_tokens=True,
-                spaces_between_special_tokens=False,
-            )
-            if stop_str:
-                if isinstance(stop_str, str):
-                    pos = output.rfind(stop_str, rfind_start)
+        output = tokenizer.decode(
+            tmp_output_ids,
+            skip_special_tokens=True,
+            spaces_between_special_tokens=False,
+        )
+        if stop_str:
+            if isinstance(stop_str, str):
+                pos = output.rfind(stop_str, rfind_start)
+                if pos != -1:
+                    output = output[:pos]
+                    stopped = True
+            elif isinstance(stop_str, Iterable):
+                for each_stop in stop_str:
+                    pos = output.rfind(each_stop, rfind_start)
                     if pos != -1:
                         output = output[:pos]
                         stopped = True
-                elif isinstance(stop_str, Iterable):
-                    for each_stop in stop_str:
-                        pos = output.rfind(each_stop, rfind_start)
+                        break
+            else:
+                raise ValueError("Invalid stop field type.")
+
+        yield {
+            "text": output,
+            "usage": {
+                "prompt_tokens": input_echo_len,
+                "completion_tokens": i,
+                "total_tokens": input_echo_len + i,
+            },
+            "finish_reason": None,
+        }
+    else:
+
+        past_key_values = out = None
+        for i in range(max_new_tokens):
+            if i == 0:
+                if model.config.is_encoder_decoder:
+                    out = model.decoder(
+                        input_ids=start_ids,
+                        encoder_hidden_states=encoder_output,
+                        use_cache=True,
+                    )
+                    logits = model.lm_head(out[0])
+                else:
+                    out = model(
+                        torch.as_tensor([input_ids], device=device), use_cache=True
+                    )
+                    logits = out.logits
+                past_key_values = out.past_key_values
+            else:
+                if model.config.is_encoder_decoder:
+                    out = model.decoder(
+                        input_ids=torch.as_tensor(
+                            [[token]], device=device  # noqa: F821
+                        ),
+                        encoder_hidden_states=encoder_output,
+                        use_cache=True,
+                        past_key_values=past_key_values,
+                    )
+
+                    logits = model.lm_head(out[0])
+                else:
+                    out = model(
+                        input_ids=torch.as_tensor(
+                            [[token]], device=device  # noqa: F821
+                        ),
+                        use_cache=True,
+                        past_key_values=past_key_values,
+                    )
+                    logits = out.logits
+                if type(model) is not DExpertsLlama:
+                    past_key_values = out.past_key_values
+            if logits_processor:
+                if repetition_penalty > 1.0:
+                    tmp_output_ids = torch.as_tensor([output_ids], device=logits.device)
+                else:
+                    tmp_output_ids = None
+                last_token_logits = logits_processor(tmp_output_ids, logits[:, -1, :])[
+                    0
+                ]
+            last_token_logits = logits[0, -1, :]
+
+            if device == "mps":
+                # Switch to CPU by avoiding some bugs in mps backend.
+                last_token_logits = last_token_logits.float().to("cpu")
+
+            if temperature < 1e-5 or top_p < 1e-8:  # greedy
+                token = int(torch.argmax(last_token_logits))
+            else:
+                probs = torch.softmax(last_token_logits, dim=-1)
+                token = int(torch.multinomial(probs, num_samples=1).squeeze(1))
+
+            output_ids.append(token)
+
+            if token in stop_token_ids:
+                stopped = True
+            else:
+                stopped = False
+            if i == 0 and force_generate:
+                stopped = False
+            if i == max_new_tokens - 1 or stopped:
+                if echo:
+                    tmp_output_ids = output_ids
+                    rfind_start = len_prompt
+                else:
+                    tmp_output_ids = output_ids[input_echo_len:]
+                    rfind_start = 0
+
+                output = tokenizer.decode(
+                    tmp_output_ids,
+                    skip_special_tokens=True,
+                    spaces_between_special_tokens=False,
+                )
+                if stop_str:
+                    if isinstance(stop_str, str):
+                        pos = output.rfind(stop_str, rfind_start)
                         if pos != -1:
                             output = output[:pos]
                             stopped = True
-                            break
-                else:
-                    raise ValueError("Invalid stop field type.")
+                    elif isinstance(stop_str, Iterable):
+                        for each_stop in stop_str:
+                            pos = output.rfind(each_stop, rfind_start)
+                            if pos != -1:
+                                output = output[:pos]
+                                stopped = True
+                                break
+                    else:
+                        raise ValueError("Invalid stop field type.")
 
-            yield {
-                "text": output,
-                "usage": {
-                    "prompt_tokens": input_echo_len,
-                    "completion_tokens": i,
-                    "total_tokens": input_echo_len + i,
-                },
-                "finish_reason": None,
-            }
+                yield {
+                    "text": output,
+                    "usage": {
+                        "prompt_tokens": input_echo_len,
+                        "completion_tokens": i,
+                        "total_tokens": input_echo_len + i,
+                    },
+                    "finish_reason": None,
+                }
 
-        if stopped:
-            break
+            if stopped:
+                break
 
     # finish stream event, which contains finish reason
     if i == max_new_tokens - 1:

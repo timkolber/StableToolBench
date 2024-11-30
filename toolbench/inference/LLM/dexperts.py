@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 import torch
 import torch.nn.functional as F
+from accelerate import dispatch_model, infer_auto_device_map
 from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
@@ -40,19 +41,31 @@ class DExpertsLlama(torch.nn.Module):
         super(DExpertsLlama, self).__init__()
 
         self.base = AutoModelForCausalLM.from_pretrained(
-            device_map="auto",
             pretrained_model_name_or_path=base_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
         )
+
+        base_device_map = infer_auto_device_map(
+            self.base, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
+        )
+        self.base = dispatch_model(self.base, device_map=base_device_map)
         self.expert = AutoModelForCausalLM.from_pretrained(
-            device_map="auto",
             pretrained_model_name_or_path=expert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
         )
+        expert_device_map = infer_auto_device_map(
+            self.expert, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
+        )
+        self.expert = dispatch_model(self.expert, device_map=expert_device_map)
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
-            device_map="auto",
             pretrained_model_name_or_path=antiexpert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
+        )
+        antiexpert_device_map = infer_auto_device_map(
+            self.antiexpert, max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"}
+        )
+        self.antiexpert = dispatch_model(
+            self.antiexpert, device_map=antiexpert_device_map
         )
 
         self.base.eval()

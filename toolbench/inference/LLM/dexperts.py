@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 import torch
 import torch.nn.functional as F
+from tqdm import tqdm
 from transformers import (
     AutoModelForCausalLM,
     BitsAndBytesConfig,
@@ -190,7 +191,7 @@ class DExpertsLlama(torch.nn.Module):
         if return_logits_for_analysis:
             analysis_data = defaultdict(list)
 
-        for step in range(max_new_tokens):
+        for step in tqdm(range(max_new_tokens)):
             # prepare model inputs with past_key_values and attention_mask
             base_inputs = self.base.prepare_inputs_for_generation(
                 input_ids, **base_kwargs

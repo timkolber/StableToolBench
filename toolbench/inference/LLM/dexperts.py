@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 from transformers import (
     AutoModelForCausalLM,
+    BitsAndBytesConfig,
     PreTrainedTokenizer,
 )
 from transformers.generation.utils import (
@@ -40,19 +41,24 @@ class DExpertsLlama(torch.nn.Module):
 
         model_kwargs = {
             "device_map": "auto",
-            "offload_folder": "/content/drive/MyDrive/toolllm/offload_folder",
             "torch_dtype": torch.float16,
             "offload_state_dict": True,
         }
 
         self.base = AutoModelForCausalLM.from_pretrained(
-            base_model_name_or_path, load_in_4bit=True, **model_kwargs
+            base_model_name_or_path,
+            quantization_config=BitsAndBytesConfig(load_in_4bit=True),
+            **model_kwargs,
         )
         self.expert = AutoModelForCausalLM.from_pretrained(
-            expert_model_name_or_path, load_in_4bit=True, **model_kwargs
+            expert_model_name_or_path,
+            quantization_config=BitsAndBytesConfig(load_in_4bit=True),
+            **model_kwargs,
         )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
-            antiexpert_model_name_or_path, load_in_4bit=True, **model_kwargs
+            antiexpert_model_name_or_path,
+            quantization_config=BitsAndBytesConfig(load_in_4bit=True),
+            **model_kwargs,
         )
 
         self.base.eval()

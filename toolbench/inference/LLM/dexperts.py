@@ -44,7 +44,7 @@ class DExpertsLlama(torch.nn.Module):
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
             offload_state_dict=True,
             offload_folder="offload_base/",
-            max_memory={0: "5GB", "cpu": "20GB"},
+            max_memory={0: "5GB", "cpu": "15GB"},
             device_map="auto",
         )
         self.expert = AutoModelForCausalLM.from_pretrained(
@@ -52,7 +52,7 @@ class DExpertsLlama(torch.nn.Module):
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
             offload_state_dict=True,
             offload_folder="offload_expert/",
-            max_memory={0: "5GB", "cpu": "20GB"},
+            max_memory={0: "5GB", "cpu": "15GB"},
             device_map="auto",
         )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
@@ -60,7 +60,7 @@ class DExpertsLlama(torch.nn.Module):
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
             offload_state_dict=True,
             offload_folder="offload_antiexpert/",
-            max_memory={0: "5GB", "cpu": "20GB"},
+            max_memory={0: "5GB", "cpu": "15GB"},
             device_map="auto",
         )
 

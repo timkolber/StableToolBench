@@ -41,17 +41,17 @@ class DExpertsLlama(torch.nn.Module):
 
         self.base = AutoModelForCausalLM.from_pretrained(
             device_map="auto",
-            base_model_name_or_path=base_model_name_or_path,
+            pretrained_model_name_or_path=base_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
         )
         self.expert = AutoModelForCausalLM.from_pretrained(
             device_map="auto",
-            expert_model_name_or_path=expert_model_name_or_path,
+            pretrained_model_name_or_path=expert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
         )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
             device_map="auto",
-            antiexpert_model_name_or_path=antiexpert_model_name_or_path,
+            pretrained_model_name_or_path=antiexpert_model_name_or_path,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
         )
 

@@ -1,3 +1,24 @@
+The files that were most changed or added for my project were dexperts.py, dexperts_tool_llama.py and utils.py in the inference folder. 
+
+The code was run using the following command:
+```
+srun python StableToolBench/toolbench/inference/qa_pipeline.py \
+    --tool_root_dir /home/students/kolber/seminars/kolber/toolenv/tools \
+    --backbone_model proxy-tuned-toolllama \
+    --max_observation_length 256 \
+    --observ_compress_method truncate \
+    --method DFS_woFilter_w2 \
+    --input_query_file /home/students/kolber/seminars/kolber/data/inference_query_demo.json \
+    --output_answer_file /home/students/kolber/seminars/kolber/data/proxytuned_toolllama_dfs/ \
+    --toolbench_key TOOLBENCH_KEY \
+    --base_model_name_or_path meta-llama/Llama-2-13b-hf \
+    --expert_model_name_or_path ToolBench/ToolLLaMA-2-7b-v2 \
+    --antiexpert_model_name_or_path meta-llama/Llama-2-7b-hf
+```
+
+______________________________________________________________________________________________________
+
+
 <div align= "center">
     <h1> <img src="stbicon.svg" alt="favicon" style="width: 35px; height: auto;"> StableToolBench</h1>
 </div>

@@ -62,7 +62,7 @@ class DExpertsToolLLaMA:
                 "model": "",
                 "prompt": prompt,
                 "temperature": 0,
-                "max_new_tokens": 256,
+                "max_new_tokens": 128,
                 "stop": "</s>",
                 "stop_token_ids": None,
                 "echo": False,
@@ -72,7 +72,7 @@ class DExpertsToolLLaMA:
                 self.model,
                 self.tokenizer,
                 gen_params,
-                "cuda",
+                "cpu",
                 self.max_sequence_length,
                 force_generate=True,
             )

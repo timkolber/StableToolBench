@@ -42,27 +42,24 @@ class DExpertsLlama(torch.nn.Module):
 
         self.base = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=base_model_name_or_path,
+            torch_dtype=torch.bfloat16,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
-            offload_state_dict=True,
-            offload_folder="offload_base/",
-            max_memory={0: "5GB", "cpu": "15GB"},
-            device_map="auto",
+            low_cpu_mem_usage=True,
+            use_cache=True,
         )
         self.expert = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=expert_model_name_or_path,
+            torch_dtype=torch.bfloat16,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
-            offload_state_dict=True,
-            offload_folder="offload_expert/",
-            max_memory={0: "5GB", "cpu": "15GB"},
-            device_map="auto",
+            low_cpu_mem_usage=True,
+            use_cache=True,
         )
         self.antiexpert = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=antiexpert_model_name_or_path,
+            torch_dtype=torch.bfloat16,
             quantization_config=BitsAndBytesConfig(load_in_4bit=True),
-            offload_state_dict=True,
-            offload_folder="offload_antiexpert/",
-            max_memory={0: "5GB", "cpu": "15GB"},
-            device_map="auto",
+            low_cpu_mem_usage=True,
+            use_cache=True,
         )
 
         self.base.eval()
@@ -168,6 +165,7 @@ class DExpertsLlama(torch.nn.Module):
         stop_token_ids=[],
         **kwargs,
     ):
+        stopped = False
         base_kwargs = kwargs.copy()
         expert_kwargs = kwargs.copy()
         antiexpert_kwargs = kwargs.copy()
@@ -276,9 +274,11 @@ class DExpertsLlama(torch.nn.Module):
 
             # stopping criteria
             if stopping_criteria and stopping_criteria(input_ids, None):
+                stopped = True
                 break
 
             if next_tokens in stop_token_ids:
+                stopped = True
                 break
 
             # if eos_token was found in one sentence, set sentence to finished
@@ -290,9 +290,13 @@ class DExpertsLlama(torch.nn.Module):
 
             # stop when each sentence is finished
             if unfinished_sequences.max() == 0:
+                stopped = True
                 break
+            
+        stopped = True
 
         if return_logits_for_analysis:
+            analysis_data["stopped"] = stopped
             analysis_data["steps"] = step
             analysis_data["base_kwargs"] = base_kwargs
             analysis_data["expert_kwargs"] = expert_kwargs
